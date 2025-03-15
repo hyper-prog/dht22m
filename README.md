@@ -1,4 +1,4 @@
-![DHT22M logo](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/dht22m_logo.png)
+![DHT22M logo](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/dht22m_logo_s.png)
 
 Raspberry Pi kernel module for DHT22 (AM2302) sensors
 ============================================================
