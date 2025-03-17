@@ -96,18 +96,21 @@ If you did so, run the following commands to configure soruces as your running k
 Building and install the kernel module
 --------------------------------------
 
+Clone dht22m sources from github 
 To compile enter the dht22m directory and build & install the module
 
-    make
-    make install
+    git clone https://github.com/hyper-prog/dht22m
+    cd dht22m
+    sudo make
+    sudo make install
 
 Load the module by:
 
-    modprobe dht22m
+    sudo modprobe dht22m
 
 If you would like to make the dht22m module loads after reboot run:
 
-    echo "dht22m" > /etc/modules-load.d/dht22m.conf
+    sudo echo "dht22m" > /etc/modules-load.d/dht22m.conf
 
 Wiring of DHT22 & Hardware connections
 --------------------------------------
