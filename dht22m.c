@@ -94,6 +94,7 @@ struct dht22_state {
 	u8 bytes[5];
 
 	ktime_t read_timestamp;
+	bool negative;
 	int temperature;
 	int humidity;
 };
@@ -197,6 +198,9 @@ static int sensor_start_read(int sensor_index)
 
 	sensor_state.gpio = gpio_pins[sensor_index];
 	sensor_state.readstate = DTH22M_READSTATE_COLLECT;
+	sensor_state.negative = false;
+	sensor_state.temperature = 0;
+	sensor_state.humidity = 0;
 	sensor_state.timestamps[0] = now;
 	sensor_state.num_edges = 1;
 	spin_unlock_irqrestore(&sensor_lock, flags);
@@ -301,11 +305,12 @@ static int sensor_parse_bytes(void)
 	if (sensor_state.readstate != DTH22M_READSTATE_OK)
 		goto end_parse_bytes;
 	sensor_state.read_timestamp = sensor_state.timestamps[sensor_state.num_edges - 1];
+	sensor_state.negative = false;
 	sensor_state.humidity = (sensor_state.bytes[0] * 256 + sensor_state.bytes[1]);
 	sensor_state.temperature = ((sensor_state.bytes[2] & 0x7F) * 256 +
 				   sensor_state.bytes[3]);
 	if (sensor_state.bytes[2] & 0x80) {
-		sensor_state.temperature = -sensor_state.temperature;
+		sensor_state.negative = true;
 	}
 end_parse_bytes:
 	spin_unlock_irqrestore(&sensor_lock, flags);
@@ -505,6 +510,7 @@ static int chardevice_open(struct inode *inode, struct file *file)
 {
 	int readstate, hum_int, hum_frac, temp_int, temp_frac;
 	unsigned long flags;
+	char sign[2];
 	char *message;
 	int minor = iminor(inode);
 	int error;
@@ -536,6 +542,8 @@ static int chardevice_open(struct inode *inode, struct file *file)
 
 	msleep(20);  /* Read cycle takes less than 6ms. */
 	sensor_parse_bytes();
+	sign[0] = '\0';
+	sign[1] = '\0';
 
 	/* Read sensor data (protected by sensor_lock) into local variables. */
 	spin_lock_irqsave(&sensor_lock, flags);
@@ -544,6 +552,8 @@ static int chardevice_open(struct inode *inode, struct file *file)
 	hum_frac = sensor_state.humidity % 10;
 	temp_int = sensor_state.temperature / 10;
 	temp_frac = sensor_state.temperature % 10;
+	if (sensor_state.negative)
+		sign[0] = '-';
 	sensor_state.readstate = DTH22M_READSTATE_NEXT;
 	spin_unlock_irqrestore(&sensor_lock, flags);
 	/* Sensor lock released. */
@@ -556,8 +566,8 @@ static int chardevice_open(struct inode *inode, struct file *file)
 	}
 
 	if (readstate == DTH22M_READSTATE_OK) {
-		snprintf(message,DHT22M_CHARDEV_BUFFSIZE, "Ok;%d.%d;%d.%d\n",
-			 temp_int, temp_frac,hum_int, hum_frac);
+		snprintf(message,DHT22M_CHARDEV_BUFFSIZE, "Ok;%s%d.%d;%d.%d\n",
+			 sign,temp_int, temp_frac,hum_int, hum_frac);
 	} else if(readstate == DTH22M_READSTATE_CHKSUMERR) {
 		snprintf(message,DHT22M_CHARDEV_BUFFSIZE, "ChecksumError\n");
 	} else if(readstate == DTH22M_READSTATE_TOOSOON) {
