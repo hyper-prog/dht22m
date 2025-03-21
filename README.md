@@ -3,7 +3,7 @@
 Raspberry Pi kernel module for DHT22 (AM2302) sensors
 ============================================================
 
-_The most reliable dht22 sensor reader_
+_**The most reliable dht22 sensor reader!**_
 
 This project implements a Raspberry Pi kernel module for the DHT22 temperature
 and humidity sensor. The goal of the driver is to read multiple sensors so that
