@@ -1,5 +1,5 @@
 /*
- * Kernel module DHT22 (AM2302) sensor reader for Raspberry Pi 
+ * Kernel module for reading DHT22 (AM2302) sensors on Raspberry Pi
  *
  * Copyright 2025 Péter Deák (hyper80@gmail.com)
  *
