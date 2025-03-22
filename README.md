@@ -1,6 +1,6 @@
 ![DHT22M logo](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/dht22m_logo_s.png)
 
-Raspberry Pi kernel module for DHT22 (AM2302) sensors
+Kernel module DHT22 (AM2302) sensor reader for Raspberry Pi 
 ============================================================
 
 _**The most reliable dht22 sensor reader!**_
