@@ -1,16 +1,19 @@
 ![DHT22M logo](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/dht22m_logo_s.png)
 
-Kernel module for reading DHT22 (AM2302) sensors on Raspberry Pi
+Kernel module for reading DHT22 / AM2302 sensors on Raspberry Pi
 ================================================================
 
 _**The most reliable dht22 sensor reader!**_
 
-This project implements a Raspberry Pi kernel module for the DHT22 temperature
-and humidity sensor. The goal of the driver is to read multiple sensors so that
-the GPIOs can be dynamically set without reloading the kernel module.
+This project implements a [Raspberry Pi](https://en.wikipedia.org/wiki/Raspberry_Pi)
+[kernel module](https://en.wikipedia.org/wiki/Loadable_kernel_module)
+for the DHT22 temperature and humidity sensor.
+The goal of the driver is to read multiple sensors so that
+the [GPIOs](https://en.wikipedia.org/wiki/General-purpose_input/output)
+can be dynamically set without reloading the kernel module.
 The sensor data can easely read from `/dev/dht22mX` character devices.
-This kernel module uses hardware interrupts to collect sensor data,
-which results in much more reliable results (fewer crc errors) than
+This kernel module uses [hardware interrupts](https://en.wikipedia.org/wiki/Interrupt#Hardware_interrupts)
+to collect sensor data, which results in much more reliable results (fewer crc errors) than
 user-mode readers that constantly monitor the status of the gpio.
 
 Introduction & Backgrounds
@@ -33,10 +36,22 @@ I turned to kernel module development. By handling GPIO signal processing at the
 the module ensures much finer timing control,
 significantly reducing read errors and enhancing overall reliability.
 
+My moderately loaded Raspberri Pi with 4 sensor produce the following statistics:
+
+With user mode reader
+![User mode stats](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/um-stats.png)
+
+With kernel mode reader
+![Kernel mode stats](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/krnl-stats.png)
+
+_It can be seen that with the traditional user mode reading method the percentage of errors is 5-20%,
+while with the dht22m kernel module it is less than 1%. (typically less than 0.1%)_
+
 Configure sensor GPIOs to read data
 -------------------------------------
 
-You can send your dht22m sensor GPIOs numbers to as sysfs file: `/sys/class/dht22m/gpiolist`
+You can send your dht22m sensor GPIOs numbers to as
+[sysfs](https://en.wikipedia.org/wiki/Sysfs) file: `/sys/class/dht22m/gpiolist`
 The GPIO numbers are separated by spaces. After If success the `/dev/dht22mX`
 devices will be created in same order as the GPIOs listed in the sysfs file.
 
@@ -123,8 +138,8 @@ References
 
 To learn more about Linux kernel
 modules in general, see [The Linux Kernel Module Programming
-Guide](https://sysprog21.github.io/lkmpg/). To learn more about the DHT22
-sensor, see the [data sheet](http://www.electrodragon.com/w/AM2302).
+Guide](https://sysprog21.github.io/lkmpg/). To learn more about the DHT22 / AM2302
+sensor, see the [data sheet](https://files.seeedstudio.com/wiki/Grove-Temperature_and_Humidity_Sensor_Pro/res/AM2302-EN.pdf).
 
 Author
 -------

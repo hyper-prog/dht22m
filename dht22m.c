@@ -490,7 +490,10 @@ static ssize_t dht22m_gpios_show(struct class *class,
 
 	mutex_lock(&gpio_config_mutex);
 	for (i = 0; i < num_gpios; ++i) {
-		len += sprintf(buf + len, "%d ", gpio_pins[i]);
+		if (i > 0) {
+			len += sprintf(buf + len, " ");
+		}
+		len += sprintf(buf + len, "%d", gpio_pins[i]);
 	}
 	mutex_unlock(&gpio_config_mutex);
 	len += sprintf(buf + len, "\n");
