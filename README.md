@@ -39,9 +39,11 @@ significantly reducing read errors and enhancing overall reliability.
 My moderately loaded Raspberri Pi with 4 sensor produce the following statistics:
 
 With user mode reader
+
 ![User mode stats](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/um-stats.png)
 
 With kernel mode reader
+
 ![Kernel mode stats](https://raw.githubusercontent.com/hyper-prog/dht22m/master/images/krnl-stats.png)
 
 _It can be seen that with the traditional user mode reading method the percentage of errors is 5-20%,
