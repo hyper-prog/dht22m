@@ -1,7 +1,7 @@
 /*
- * Kernel module for reading DHT22 (AM2302) sensors on Raspberry Pi
+ * Kernel module for reading DHT22 / AM2302 sensors on Raspberry Pi
  *
- * Copyright 2025 Péter Deák (hyper80@gmail.com)
+ * Copyright 2025, Péter Deák (hyper80@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -76,10 +76,14 @@ static int sensor_parse_bytes(void);
  * If a read or calculation in progress the readstate holds
  * DTH22M_READSTATE_COLLECT, so "ReaderBudy" returned.
  * Only accept new read if readstate == DTH22M_READSTATE_NEXT
+ *
+ * @gpio: Gpio of the current read sensor.
+ * @readstate: State of the reading process on the current sensor.
  * @num_edges: Number of detected edges during a sensor read.
  * @timestamps: Timestamps of detected edges.
  * @bytes: Decoded transmitted data from a sensor read.
  * @read_timestamp: Timestamps of latest sensor read.
+ * @negative: Holds the sign of the temperature (True: negative).
  * @temperature: Most recently read temperature (times ten).
  * @humidity: Most recently read humidity percentage (times ten).
  */
@@ -110,7 +114,7 @@ static DEFINE_SPINLOCK(sensor_lock);  /* Protects sensor_state. */
 /*
  * s_handle_edge() - process interrupt due to falling edge on GPIO pin.
  * @irq: Then IRQ number. Unused.
- * @dev_id: The device identifier. Unused.
+ * @dev_id: Holds the gpio of the current read sensor.
  *
  * Records the timestamp of a falling edge (high to low) on the DHT22
  * sensor pin. Prior to the read sequence, sensor_state.timestamps[0]
