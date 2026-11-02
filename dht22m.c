@@ -342,6 +342,7 @@ end_parse_bytes:
 static int configure_gpios(void)
 {
 	int i;
+	int gioreq_ret;
 
 	printk(KERN_INFO DHT22M_MODULE_NAME ": configure sensors gpios\n");
 	for (i = 0; i < num_gpios; ++i) {
@@ -351,10 +352,9 @@ static int configure_gpios(void)
 			continue;
 		}
 
-		int ret;
-		ret = gpio_request(gpio_pins[i], DHT22M_MODULE_NAME);
-		if (ret < 0) {
-			printk(KERN_ALERT DHT22M_MODULE_NAME ": gpio_request(%d) failed: error %d\n", gpio_pins[i], ret);
+		gioreq_ret = gpio_request(gpio_pins[i], DHT22M_MODULE_NAME);
+		if (gioreq_ret < 0) {
+			printk(KERN_ALERT DHT22M_MODULE_NAME ": gpio_request(%d) failed: error %d\n", gpio_pins[i], gioreq_ret);
 			sensor_states[i] = DHT22M_STATES_GPIOERROR;
 			continue;
 		}
