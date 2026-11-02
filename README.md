@@ -120,11 +120,11 @@ Linux global GPIO number = GPIO chip base + GPIO line offset
 For example, on a Raspberry Pi 4 where the `pinctrl-bcm2711` GPIO chip
 has a base number of `512`:
 
-  BCM GPIO   GPIO line offset   Linux global GPIO number
-  ---------- ------------------ --------------------------
-  22         22                 534
-  23         23                 535
-  27         27                 539
+| BCM GPIO | Base | Linux global GPIO number |
+| -------- | ---- | ------------------------ |
+|  22      | 512  | 534                      |
+|  23      | 512  | 535                      |
+|  27      | 512  | 539                      |
 
 **Important:** GPIO chip base numbers may vary depending on the
 Raspberry Pi model and kernel configuration. Always check the values on
