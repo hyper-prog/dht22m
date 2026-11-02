@@ -29,6 +29,7 @@
 #include <linux/time64.h>
 #include <linux/types.h>
 #include <linux/uaccess.h>
+#include <linux/version.h>
 
 #define DHT22M_DEVICE_NAME "dht22m"
 #define DHT22M_MODULE_NAME "dht22m"
@@ -43,6 +44,12 @@
 #define DHT22M_STATES_CONFIGURED	1
 #define DHT22M_STATES_GPIOERROR		2
 #define DHT22M_STATES_IRQERROR		3
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+#define DHT22M_CLASS_CONST const
+#else
+#define DHT22M_CLASS_CONST
+#endif
 
 static DEFINE_MUTEX(gpio_config_mutex);
 
@@ -344,8 +351,10 @@ static int configure_gpios(void)
 			continue;
 		}
 
-		if (gpio_request(gpio_pins[i], DHT22M_MODULE_NAME) < 0) {
-			printk(KERN_ALERT DHT22M_MODULE_NAME ": gpio_request failed\n");
+		int ret;
+		ret = gpio_request(gpio_pins[i], DHT22M_MODULE_NAME);
+		if (ret < 0) {
+			printk(KERN_ALERT DHT22M_MODULE_NAME ": gpio_request(%d) failed: error %d\n", gpio_pins[i], ret);
 			sensor_states[i] = DHT22M_STATES_GPIOERROR;
 			continue;
 		}
@@ -407,8 +416,8 @@ static void free_gpios(void)
  *
  * Receices a string from the userspace through sysfs which contains the gpio numbers.
  */
-static ssize_t dht22m_gpios_store(struct class *class,
-				  struct class_attribute *attr,
+static ssize_t dht22m_gpios_store(DHT22M_CLASS_CONST struct class *class,
+				  DHT22M_CLASS_CONST struct class_attribute *attr,
 				  const char *buf, size_t count)
 {
 	int full_length;
@@ -486,8 +495,8 @@ static ssize_t dht22m_gpios_store(struct class *class,
 /*
  * dht22m_gpios_show() -  Sysfs read handler: print the current configured gpios
  */
-static ssize_t dht22m_gpios_show(struct class *class,
-				 struct class_attribute *attr, char *buf)
+static ssize_t dht22m_gpios_show(DHT22M_CLASS_CONST struct class *class,
+				 DHT22M_CLASS_CONST struct class_attribute *attr, char *buf)
 {
 	int i;
 	int len = 0;
@@ -676,7 +685,7 @@ static void remove_devices(void)
 }
 
 /* Initialize the DHT22M module as it is loaded. */
-int __init dht22m_init(void)
+static int __init dht22m_init(void)
 {
 	int i;
 	int error = 0;
@@ -693,7 +702,11 @@ int __init dht22m_init(void)
 		goto alloc_chrdev_region_failed;
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+	dht22m_class = class_create(DHT22M_MODULE_NAME);
+#else
 	dht22m_class = class_create(THIS_MODULE, DHT22M_MODULE_NAME);
+#endif
 	if (IS_ERR(dht22m_class)) {
 		printk(KERN_ALERT DHT22M_MODULE_NAME ": class_create failed\n");
 		error = PTR_ERR(dht22m_class);
@@ -721,7 +734,7 @@ alloc_chrdev_region_failed:
 }
 
 /* Clean up before the DHT22M module is unloaded. */
-void __exit dht22m_cleanup(void)
+static void __exit dht22m_cleanup(void)
 {
 	mutex_lock(&gpio_config_mutex);
 	free_gpios();
@@ -738,6 +751,6 @@ module_init(dht22m_init);
 module_exit(dht22m_cleanup);
 
 MODULE_LICENSE("GPL");
-MODULE_VERSION("1.0");
+MODULE_VERSION("1.1");
 MODULE_AUTHOR("Peter Deak <hyper80@gmail.com>");
 MODULE_DESCRIPTION("DHT22 (AM2302) humidity/temperature multi device driver");

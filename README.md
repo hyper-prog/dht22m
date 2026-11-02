@@ -71,6 +71,86 @@ _Note: The kernel module is written in such a way that if a configuration reques
 is received matches the running configuration, recognizes the matching and does nothing.
 So the user programs can safely send the necessary settings at startup, it will not cause kernel overhead._
 
+
+Configure sensor GPIOs to read data
+------------------------------------
+
+The `dht22m` module expects **Linux global GPIO numbers**, not BCM GPIO
+numbers or physical pin numbers.
+
+### 1. Identify the GPIO chip and line offset
+
+Install the `gpiod` tools if they are not already installed:
+
+``` bash
+sudo apt install gpiod
+```
+
+List the available GPIO chips:
+
+``` bash
+gpiodetect
+```
+
+Display the GPIO lines of the appropriate chip:
+
+``` bash
+gpioinfo gpiochip0
+```
+
+Find the GPIO line you want to use. For example, BCM GPIO24 corresponds
+to line offset `24` on the Raspberry Pi 4's `pinctrl-bcm2711` GPIO chip.
+
+### 2. Find the GPIO chip base number
+
+Run the following command to display the base number of each GPIO chip:
+
+``` bash
+for c in /sys/class/gpio/gpiochip*; do
+    echo "$(cat "$c/label"): base=$(cat "$c/base"), ngpio=$(cat "$c/ngpio")"
+done
+```
+
+The Linux global GPIO number is calculated as:
+
+``` text
+Linux global GPIO number = GPIO chip base + GPIO line offset
+```
+
+For example, on a Raspberry Pi 4 where the `pinctrl-bcm2711` GPIO chip
+has a base number of `512`:
+
+  BCM GPIO   GPIO line offset   Linux global GPIO number
+  ---------- ------------------ --------------------------
+  22         22                 534
+  23         23                 535
+  27         27                 539
+
+**Important:** GPIO chip base numbers may vary depending on the
+Raspberry Pi model and kernel configuration. Always check the values on
+your own system.
+
+### 3. Configure the sensor GPIOs
+
+Write the Linux global GPIO numbers to `/sys/class/dht22m/gpiolist`,
+separated by spaces.
+
+For the Raspberry Pi 4 example above:
+
+``` bash
+echo "534 535 539" | sudo tee /sys/class/dht22m/gpiolist
+```
+
+To verify the configuration:
+
+``` bash
+cat /sys/class/dht22m/gpiolist
+```
+
+The corresponding device nodes (`/dev/dht22m0`, `/dev/dht22m1`, etc.)
+are created in the same order as the GPIO numbers in the list.
+
+
 Read the values
 ----------------
 
