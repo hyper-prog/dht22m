@@ -49,20 +49,54 @@ With kernel mode reader
 _It can be seen that with the traditional user mode reading method the percentage of errors is 5-20%,
 while with the dht22m kernel module it is less than 1%. (typically less than 0.1%)_
 
+
+Pre-requisites to build the kernel module
+-----------------------------------------
+
+To build the kernel module, you need to first install the base compiler tools
+and linux header packages:
+
+    sudo apt install build-essential
+    # On 64 bit systems:
+    sudo apt install linux-headers-rpi-v8
+    # On 32 bit systems
+    sudo apt install linux-headers-rpi-v7
+
+
+Building and install the kernel module
+--------------------------------------
+
+Clone dht22m sources from github.
+To compile module enter the dht22m directory and build & install it.
+
+    git clone https://github.com/hyper-prog/dht22m
+    cd dht22m
+    sudo make
+    sudo make install
+
+If success, you can load the module:
+
+    sudo modprobe dht22m
+
+In case you would like to make the dht22m module loads after reboot run:
+
+    sudo echo "dht22m" > /etc/modules-load.d/dht22m.conf
+
+
 Configure sensor GPIOs to read data
 -------------------------------------
 
-You can send your dht22m sensor GPIOs numbers to as
+You can send your dht22m sensor GPIOs numbers to a
 [sysfs](https://en.wikipedia.org/wiki/Sysfs) file: `/sys/class/dht22m/gpiolist`
 The GPIO numbers are separated by spaces. After If success the `/dev/dht22mX`
 devices will be created in same order as the GPIOs listed in the sysfs file.
 
-    echo "2 3 22" > /sys/class/dht22m/gpiolist
+    echo "514 515 534" > /sys/class/dht22m/gpiolist
 
 You can always check the GPIOs settings of your dht22 devices
 
     cat /sys/class/dht22m/gpiolist
-    2 3 22
+    514 515 534
 
     ls /dev/dht22*
     /dev/dht22m0 /dev/dht22m1 /dev/dht22m2
@@ -72,8 +106,8 @@ is received matches the running configuration, recognizes the matching and does 
 So the user programs can safely send the necessary settings at startup, it will not cause kernel overhead._
 
 
-Configure sensor GPIOs to read data
-------------------------------------
+Determine the GPIO numbers of sensors
+--------------------------------------
 
 The `dht22m` module expects **Linux global GPIO numbers**, not BCM GPIO
 numbers or physical pin numbers.
@@ -82,21 +116,14 @@ numbers or physical pin numbers.
 
 Install the `gpiod` tools if they are not already installed:
 
-``` bash
-sudo apt install gpiod
-```
+    sudo apt install gpiod
 
-List the available GPIO chips:
+List the available GPIO chips, and gpio ports:
 
-``` bash
-gpiodetect
-```
-
-Display the GPIO lines of the appropriate chip:
-
-``` bash
-gpioinfo gpiochip0
-```
+    #List gpio chips
+    gpiodetect
+    #List gpio lines
+    gpioinfo
 
 Find the GPIO line you want to use. For example, BCM GPIO24 corresponds
 to line offset `24` on the Raspberry Pi 4's `pinctrl-bcm2711` GPIO chip.
@@ -105,17 +132,13 @@ to line offset `24` on the Raspberry Pi 4's `pinctrl-bcm2711` GPIO chip.
 
 Run the following command to display the base number of each GPIO chip:
 
-``` bash
-for c in /sys/class/gpio/gpiochip*; do
-    echo "$(cat "$c/label"): base=$(cat "$c/base"), ngpio=$(cat "$c/ngpio")"
-done
-```
+    for c in /sys/class/gpio/gpiochip*; do
+        echo "$(cat "$c/label"): base=$(cat "$c/base"), ngpio=$(cat "$c/ngpio")"
+    done
 
 The Linux global GPIO number is calculated as:
 
-``` text
-Linux global GPIO number = GPIO chip base + GPIO line offset
-```
+    Linux global GPIO number = GPIO chip base + GPIO line offset
 
 For example, on a Raspberry Pi 4 where the `pinctrl-bcm2711` GPIO chip
 has a base number of `512`:
@@ -137,15 +160,11 @@ separated by spaces.
 
 For the Raspberry Pi 4 example above:
 
-``` bash
-echo "534 535 539" | sudo tee /sys/class/dht22m/gpiolist
-```
+    echo "534 535 539" | sudo tee /sys/class/dht22m/gpiolist
 
 To verify the configuration:
 
-``` bash
-cat /sys/class/dht22m/gpiolist
-```
+    cat /sys/class/dht22m/gpiolist
 
 The corresponding device nodes (`/dev/dht22m0`, `/dev/dht22m1`, etc.)
 are created in the same order as the GPIO numbers in the list.
@@ -171,43 +190,6 @@ The device files could send the following strings
 | `IOError`                   | GPIO/Sensor/Other error                                         |
 | `NotRead`                   | Data not read                                                   |
 
-Pre-requisites to build the kernel module
------------------------------------------
-
-To build the kernel module, you need to first install the following
-packages:
-
-    sudo apt install build-essential raspberrypi-kernel-headers
-
-On some [raspbian](https://www.raspberrypi.com/software/) versions, the sources for the running kernel
-may not be installed from a package.
-In this case, check the https://github.com/RPi-Distro/rpi-source tool
-which downloads the current running raspbery pi kernel for you.
-If you did so, run the following commands to configure soruces as your running kernel:
-
-    cd /lib/modules/$(uname -r)/build
-    zcat /proc/config.gz > .config
-    make olddefconfig
-    make modules_prepare
-
-Building and install the kernel module
---------------------------------------
-
-Clone dht22m sources from github.
-To compile module enter the dht22m directory and build & install it.
-
-    git clone https://github.com/hyper-prog/dht22m
-    cd dht22m
-    sudo make
-    sudo make install
-
-If success, you can load the module:
-
-    sudo modprobe dht22m
-
-In case you would like to make the dht22m module loads after reboot run:
-
-    sudo echo "dht22m" > /etc/modules-load.d/dht22m.conf
 
 Wiring of DHT22 & Hardware connections
 --------------------------------------
